@@ -1,0 +1,58 @@
+[
+  {
+    "initials": "DC",
+    "name": "deepraj chawda",
+    "email": "deepraj.2004.2002@gmail.com",
+    "phone": "",
+    "title": "web scarper",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "TV",
+    "name": "Tejaswi Velugoti",
+    "email": "velugotitejaswi@gmail.com",
+    "phone": "",
+    "title": "",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "SG",
+    "name": "Senguttuvan Ganesan",
+    "email": "seng@pearlthoughts.com",
+    "phone": "",
+    "title": "Consultant",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "",
+    "name": "Sanjay Hegade",
+    "email": "sanjayhegde92@gmail.com",
+    "phone": "+91 90193 33126",
+    "title": "Web Scraper",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "PK",
+    "name": "Pawan kumar",
+    "email": "pawankumarwork9413@gmail.com",
+    "phone": "+91 94139 44510",
+    "title": "python developer",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "MA",
+    "name": "Mohammed Asif",
+    "email": "asif000540@gmail.com",
+    "phone": "",
+    "title": "",
+    "is_lead": "Yes"
+  },
+  {
+    "initials": "AS",
+    "name": "Anbarasi S",
+    "email": "anbarasi.s94@gmail.com",
+    "phone": "+91 86670 91214",
+    "title": "Web Scraper Developer",
+    "is_lead": "Yes"
+  }
+]
