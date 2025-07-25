@@ -4,6 +4,10 @@ import { EmployeeDto } from '../dto/employee.dto';
 import { EmailhlpService } from './emailhlp.service';
 import { chromium } from 'playwright';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as extract from 'extract-zip';
+import { GoogleDriveService } from './google-drive.service';
 
 @Injectable()
 export class ScraperService {
@@ -12,10 +16,11 @@ export class ScraperService {
   private readonly loginUrl = `${this.baseUrl}/login?retUrl=%2F`;
   private readonly rateLimit = 3000; // 3 seconds in ms
   private lastRequestTime = 0;
-
+private readonly downloadDir = path.join(__dirname, '..', '..', 'downloads');
   constructor(
     private readonly emailService: EmailhlpService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly googleDriveService: GoogleDriveService
   ) {}
 
   private async enforceRateLimit(): Promise<void> {
@@ -26,19 +31,27 @@ export class ScraperService {
     this.lastRequestTime = Date.now();
   }
 
-  async scrapeEmployees(): Promise<EmployeeDto[]> {
+  async scrapeEmployees(): Promise<{ success: boolean; message: string; driveFolderId?: string }> {
     const browser = await chromium.launch({ headless: false });
     const context = await browser.newContext({
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36',
+      acceptDownloads: true,
     });
     const page = await context.newPage();
+
+    // Optional: Set up download handling to save files to this.downloadDir
+    page.on('download', async (download) => {
+      const filePath = path.join(this.downloadDir, await download.suggestedFilename());
+      console.log(`Downloading file to: ${filePath}`);
+      await download.saveAs(filePath);
+    });
+   
     const credentials = {
       email: this.configService.get<string>('BC_EMAIL'),
       password: this.configService.get<string>('BC_PASSWORD'),
     };
-    console.log(this.configService.get<string>('BC_EMAIL'));
-    console.log(this.configService.get<string>('BC_PASSWORD'));
-    console.log(credentials);
+    // console.log(this.configService.get<string>('BC_EMAIL'));
+    // console.log(this.configService.get<string>('BC_PASSWORD'));
+    // console.log(credentials);
 
     if (!credentials.email || !credentials.password) {
       throw new Error('BuildingConnected credentials not configured');
@@ -48,13 +61,59 @@ export class ScraperService {
       await this.login(page, credentials);
       
       // Extract employee data
-      const employees = await this.extractEmployeeData(page);
+      //const employees = await this.extractEmployeeData(page);
       
       // Save data to files
-      await this.emailService.saveToJson(employees, 'buildingconnected_data.json');
-      await this.emailService.saveToCsv(employees, 'buildingconnected_data.csv');
+      // await this.emailService.saveToJson(employees, 'buildingconnected_data.json');
+      // await this.emailService.saveToCsv(employees, 'buildingconnected_data.csv');
       
-      return employees;
+      // return employees;
+// Download files
+      const projectId = this.configService.get<string>('ProjectID');
+      this.logger.log(`Downloading files for project ID: ${projectId}`);
+      
+      // Ensure download directory exists
+      if (!fs.existsSync(this.downloadDir)) {
+        fs.mkdirSync(this.downloadDir, { recursive: true });
+      }
+        // Download project files
+        const zipPath = await this.downloadProjectFiles(page, projectId);
+        this.logger.log(`Downloaded ZIP file: ${zipPath}`);
+          // Create folder in Google Drive
+          const folderId = await this.googleDriveService.createFolder(
+            `Project_${projectId}`
+          );
+          this.logger.log(`Created Google Drive folder: ${folderId}`);
+          
+          // Upload to Google Drive
+          // await this.googleDriveService.uploadFile(
+          //   zipPath,
+          //   path.basename(zipPath),
+          //   folderId
+          // );
+
+        
+   
+
+        // // Extract ZIP contents
+        const extractPath = path.join(this.downloadDir, `extracted_${projectId}`);
+        await this.extractZip(zipPath, extractPath);
+        this.logger.log(`Extracted files to: ${extractPath}`);
+
+       
+        // // Upload all extracted files
+        const uploadResults = await this.uploadDirectoryToDrive(extractPath, folderId);
+        this.logger.log(`Uploaded ${uploadResults.length} files to Google Drive`);
+
+        // // Clean up temporary files
+        fs.rmSync(extractPath, { recursive: true, force: true });
+        fs.unlinkSync(zipPath);
+
+         return { 
+            success: true, 
+            message: 'Files uploaded to Google Drive',
+            driveFolderId: folderId
+          };
     } catch (error) {
       this.logger.error('Scraping failed', error.stack);
       throw error;
@@ -62,6 +121,34 @@ export class ScraperService {
       await browser.close();
     }
   }
+
+  private async uploadDirectoryToDrive(dirPath: string, parentFolderId: string): Promise<any[]> {
+    const results = [];
+    const items = fs.readdirSync(dirPath, { withFileTypes: true });
+
+    for (const item of items) {
+        const fullPath = path.join(dirPath, item.name);
+        
+        if (item.isDirectory()) {
+            // Create subfolder in Drive
+            const folderId = await this.googleDriveService.createFolder(item.name, parentFolderId);
+            // Recursively upload contents
+            const subResults = await this.uploadDirectoryToDrive(fullPath, folderId);
+            results.push(...subResults);
+        } else {
+            // Upload file
+            const result = await this.googleDriveService.uploadFile(
+                fullPath,
+                item.name,
+                parentFolderId
+            );
+            results.push(result);
+        }
+    }
+
+    return results;
+}
+
 
   private async login(page, credentials): Promise<void> {
     await this.enforceRateLimit();
@@ -83,6 +170,7 @@ export class ScraperService {
 
     // Wait for OTP page and get code from email
     await page.waitForSelector('#VerificationCode');
+    await page.waitForTimeout(3000);
     const otpCode = await this.emailService.getVerificationCode();
     
     // Enter OTP and submit
@@ -135,4 +223,43 @@ export class ScraperService {
 
     return employees;
   }
+
+  private async waitForDownload(timeout = 60000): Promise<string> {
+  const startTime = Date.now();
+  
+  while (Date.now() - startTime < timeout) {
+    const files = fs.readdirSync(this.downloadDir)
+      .filter(file => !file.endsWith('.crdownload'));
+    
+    if (files.length > 0) {
+      const latestFile = files.reduce((prev, curr) => {
+        const prevTime = fs.statSync(path.join(this.downloadDir, prev)).mtimeMs;
+        const currTime = fs.statSync(path.join(this.downloadDir, curr)).mtimeMs;
+        return currTime > prevTime ? curr : prev;
+      });
+      this.logger.log(`Download completed: ${latestFile}`);
+      return path.join(this.downloadDir, latestFile);
+    }
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+  throw new Error('Download timeout');
+}
+
+private async extractZip(zipPath: string, outputPath: string): Promise<void> {
+  return extract(zipPath, { dir: outputPath });
+}
+
+async downloadProjectFiles(page, projectId: string): Promise<string> {
+  await page.goto(`https://app.buildingconnected.com/projects/${projectId}/files`);
+  
+  await page.click("[data-id='select-col']");
+  await page.waitForTimeout(1000);
+  
+  await page.click("[data-testid='moreVertical']");
+  await page.waitForTimeout(1000);
+  
+  await page.click("[data-testid='menu-item--download']");
+  
+  return this.waitForDownload();
+}
 }
