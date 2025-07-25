@@ -7,6 +7,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ScraperController } from './scraper/scraper.controller';
 import { EmailhlpService } from './scraper/service/emailhlp.service';
 import { ScraperService } from './scraper/service/scraper.service';
+import { GoogleDriveService } from './scraper/service/google-drive.service';
 @Module({
   imports: [ConfigModule.forRoot({
       isGlobal: true, // Makes the config available globally
@@ -15,6 +16,6 @@ import { ScraperService } from './scraper/service/scraper.service';
     , ScraperModule
     ],
   controllers: [ScraperController,AppController],
-  providers: [AppService,ScraperService,EmailhlpService],
+  providers: [AppService,ScraperService,EmailhlpService, GoogleDriveService],
 })
 export class AppModule {}

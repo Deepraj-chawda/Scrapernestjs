@@ -1,98 +1,147 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# BuildingConnected Scraper with Google Drive Integration
+This NestJS application scrapes project documents from BuildingConnected and uploads them to Google Drive while maintaining the folder structure.
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Prerequisites
+Node.js (v16+ recommended)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+npm or yarn
 
-## Description
+Google account
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+BuildingConnected account credentials
 
-## Project setup
+### Setup Instructions
+1. Clone the repository
+    ```
+    git clone https://github.com/your-repo/building-connected-scraper.git
 
-```bash
-$ npm install
-```
+    cd building-connected-scraper
+    
+2. Install dependencies
 
-## Compile and run the project
+    ```
+        npm install
+        # or
+        yarn install
+    ```
 
-```bash
-# development
-$ npm run start
 
-# watch mode
-$ npm run start:dev
+3. Set up Google Drive OAuth Credentials
 
-# production mode
-$ npm run start:prod
-```
+    Step-by-step guide:
+ i) Go to [Google Cloud Console](https://console.cloud.google.com/)
 
-## Run tests
+* Create a new project or select an existing one
 
-```bash
-# unit tests
-$ npm run test
+ii) Enable the Google Drive API
 
-# e2e tests
-$ npm run test:e2e
+* Navigate to "APIs & Services" > "Library"
 
-# test coverage
-$ npm run test:cov
-```
+* Search for "Google Drive API" and enable it
 
-## Deployment
+iii) Create OAuth 2.0 credentials
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+* Go to "APIs & Services" > "Credentials"
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+* Click "Create Credentials" > "OAuth client ID"
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+* Select "Desktop app" as application type
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+* Name your OAuth client (e.g., "BuildingConnected Scraper")
 
-## Resources
+* Click "Create"
 
-Check out a few resources that may come in handy when working with NestJS:
+iv) Download credentials
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+* Click the download icon next to your new OAuth client
 
-## Support
+* Save the file as google-oauth-credentials.json in your project root
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+v) Configure OAuth consent screen
 
-## Stay in touch
+* Go to "OAuth consent screen"
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+* Set application type to "External"
 
-## License
+* Add your application name and support email
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+* Add scopes:
+
+    .../auth/drive
+
+    .../auth/drive.file
+
+* Add your email as a test user
+
+
+4. Get Refresh Token
+
+Run the following command to get your refresh token:
+
+   
+    npx ts-node get-refresh-token.ts
+    
+* Follow the instructions to:
+
+i) Visit the authorization URL
+
+ii) Log in with your Google account
+
+iii) Copy the authorization code
+
+iv) Paste it back into the terminal
+
+v) Save the refresh token in your .env file:
+
+    GOOGLE_REFRESH_TOKEN=your_refresh_token_here
+
+5. Configure Environment Variables
+
+Create a .env file in your project root with these variables:
+
+ 
+    # BuildingConnected credentials
+    BC_EMAIL=your_buildingconnected@email.com
+    BC_PASSWORD=your_password
+
+    # IMAP credentials for OTP retrieval
+    IMAP_USER=your_email@email.com
+    IMAP_PASSWORD=your_app_password
+    IMAP_HOST=imap.gmail.com
+
+    # Google Drive credentials
+    GOOGLE_DRIVE_JSON_FILE=F:\nestJS\building-scraper\google-service-account.json
+
+    #BuildingConnected Project ID
+    ProjectID=your_buildingconnect_projectID
+
+    GOOGLE_REFRESH_TOKEN=your_referesh_token
+
+6. Run the Application
+
+Development mode:
+
+    npm run start:dev
+
+Production mode:
+
+    npm run build
+    npm run start:prod
+
+### API Endpoints
+Get project files and upload to Google Drive
+
+    GET /scraper/projectfiles
+Example:
+
+
+    curl http://localhost:3000/scraper/projectfiles
+Response:
+
+   
+    {
+    "success": true,
+    "message": "Files uploaded to Google Drive",
+    "driveFolderId": "1AbCdEfGhIjKlMnOpQrStUvWxYz"
+    }
+
